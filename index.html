@@ -1,150 +1,154 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progress Bar Site</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        
-        /* Progress Bar Container */
-        .progress-container {
-            position: absolute;
-            top: 10px;
-            width: 50%;
-            background-color: #ddd;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        /* Progress Bar */
-        .progress-bar {
-            height: 30px;
-            width: 0%;
-            background-color: #4caf50;
-            text-align: center;
-            line-height: 30px;
-            color: white;
-            font-weight: bold;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress Bar Site</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
 
-        /* Falsche Blöcke Box (Standard: versteckt) */
-        .block-box {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 200px;
-            padding: 10px;
-            border: 2px solid #333;
-            border-radius: 8px;
-            background-color: transparent;
-            display: none; /* Standardmäßig ausgeblendet */
-        }
+    /* Progress Bar Container */
+    .progress-container {
+      position: absolute;
+      top: 10px;
+      width: 50%;
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+    }
 
-        .block-box h3 {
-            text-align: center;
-            margin: 0;
-            text-decoration: underline; /* Überschrift unterstrichen */
-        }
+    /* Progress Bar */
+    .progress-bar {
+      height: 30px;
+      width: 0%;
+      background-color: #4caf50;
+      text-align: center;
+      line-height: 30px;
+      color: white;
+      font-weight: bold;
+    }
 
-        .block-list {
-            list-style-type: none;
-            padding: 0;
-            margin-top: 10px;
-        }
-        
-        .block-list li {
-            padding: 5px;
-            color: black;
-        }
-    </style>
+    /* Falsche Blöcke Box (Standard: versteckt) */
+    .block-box {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 200px;
+      padding: 10px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background-color: transparent;
+      display: none; /* Standardmäßig ausgeblendet */
+    }
+
+    .block-box h3 {
+      text-align: center;
+      margin: 0;
+      text-decoration: underline; /* Überschrift unterstrichen */
+    }
+
+    .block-list {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    .block-list li {
+      padding: 5px;
+      color: black;
+    }
+  </style>
 </head>
 <body>
 
-    <!-- Progress Bar -->
-    <div class="progress-container">
-        <div class="progress-bar" id="progress-bar">0%</div>
-    </div>
+  <!-- Progress Bar -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progress-bar">0%</div>
+  </div>
 
-    <!-- Falsche Blöcke (Standard: versteckt) -->
-    <div class="block-box" id="block-box">
-        <h3>Falsche Blöcke</h3>
-        <ul class="block-list" id="block-list"></ul>
-    </div>
+  <!-- Falsche Blöcke (Standard: versteckt) -->
+  <div class="block-box" id="block-box">
+    <h3>Falsche Blöcke</h3>
+    <ul class="block-list" id="block-list"></ul>
+  </div>
 
-    <script>
-        // GitHub API URL zur progress.txt im Repository
-        const apiUrl = "https://api.github.com/repos/Wauinator/progress-bar-site/contents/progress.txt?ref=main";
+  <script>
+    // GitHub API URL zur progress.txt im Repository
+    const apiUrl = "https://api.github.com/repos/Wauinator/progress-bar-site/contents/progress.txt?ref=main";
 
-        // Funktion zum Laden der Daten über die GitHub API
-        async function fetchProgressData() {
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error("Fehler beim Laden der Datei");
-                const data = await response.json();
+    // Funktion zum Abrufen und Dekodieren der Daten
+    async function fetchData() {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error("Fehler beim Laden der Datei");
+      }
+      const data = await response.json();
+      // Inhalt dekodieren (Base64)
+      const decodedContent = atob(data.content);
+      return decodedContent.trim().split("\n");
+    }
 
-                // Inhalt dekodieren (Base64)
-                const decodedContent = atob(data.content);
-                const lines = decodedContent.trim().split("\n");
+    // Nur den Fortschrittsbalken aktualisieren
+    async function updateProgress() {
+      try {
+        const lines = await fetchData();
+        // Erste Zeile = Prozentzahl
+        const progress = parseInt(lines[0].replace("%", ""), 10) || 0;
+        const progressBar = document.getElementById("progress-bar");
+        progressBar.style.width = progress + "%";
+        progressBar.textContent = progress + "%";
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren des Fortschritts:", error);
+      }
+    }
 
-                // Erste Zeile = Prozentzahl
-                const progress = parseInt(lines[0].replace("%", ""), 10) || 0;
-                updateProgressBar(progress);
+    // Nur die falschen Blöcke aktualisieren
+    async function updateBlocks() {
+      try {
+        const lines = await fetchData();
+        // Restliche Zeilen = Blöcke
+        const blocks = lines.slice(1);
+        const blockList = document.getElementById("block-list");
+        const blockBox = document.getElementById("block-box");
+        blockList.innerHTML = "";
 
-                // Restliche Zeilen = Blöcke
-                const blocks = lines.slice(1);
-                updateBlocks(blocks);
-            } catch (error) {
-                console.error("Fehler beim Abrufen der Daten:", error);
-            }
+        // 5 zufällige Blöcke auswählen, sofern vorhanden
+        const randomBlocks = blocks.length > 0 ? blocks.sort(() => 0.5 - Math.random()).slice(0, 5) : [];
+
+        if (randomBlocks.length > 0) {
+          blockBox.style.display = "block"; // Box anzeigen
+          randomBlocks.forEach(block => {
+            const li = document.createElement("li");
+            li.textContent = `- ${block}`; // Strich vor dem Block
+            blockList.appendChild(li);
+          });
+        } else {
+          blockBox.style.display = "none"; // Box ausblenden, falls keine Blöcke vorhanden
         }
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren der Blöcke:", error);
+      }
+    }
 
-        // Fortschrittsbalken aktualisieren
-        function updateProgressBar(progress) {
-            const progressBar = document.getElementById("progress-bar");
-            progressBar.style.width = progress + "%";
-            progressBar.textContent = progress + "%";
-        }
+    // Initiales Laden der Daten
+    updateProgress();
+    updateBlocks();
 
-        // Zufällige falsche Blöcke auswählen und anzeigen
-        function updateBlocks(blocks) {
-            const blockList = document.getElementById("block-list");
-            const blockBox = document.getElementById("block-box");
-            blockList.innerHTML = "";
+    // Alle 10 Sekunden nur den Fortschritt aktualisieren
+    setInterval(updateProgress, 10 * 1000);
 
-            // 5 zufällige Blöcke auswählen, sofern vorhanden
-            const randomBlocks = blocks.length > 0 ? blocks.sort(() => 0.5 - Math.random()).slice(0, 5) : [];
-
-            if (randomBlocks.length > 0) {
-                blockBox.style.display = "block"; // Box anzeigen
-                randomBlocks.forEach(block => {
-                    const li = document.createElement("li");
-                    li.textContent = `- ${block}`; // Strich vor den Blöcken
-                    blockList.appendChild(li);
-                });
-            } else {
-                blockBox.style.display = "none"; // Box ausblenden, falls keine Blöcke vorhanden
-            }
-        }
-
-        // Initiales Laden der Daten
-        fetchProgressData();
-
-        // Alle 10 Sekunden Fortschritt aktualisieren
-        setInterval(fetchProgressData, 10 * 1000);
-
-        // Alle 60 Sekunden falsche Blöcke neu ziehen
-        setInterval(fetchProgressData, 60 * 1000);
-    </script>
+    // Alle 60 Sekunden die falschen Blöcke aktualisieren
+    setInterval(updateBlocks, 60 * 1000);
+  </script>
 
 </body>
 </html>
