@@ -46,7 +46,7 @@
             padding: 10px;
             border: 2px solid #333;
             border-radius: 8px;
-            background-color: #f8f8f8;
+            background-color: transparent; /* Kein Hintergrund */
         }
 
         .block-box h3 {
@@ -62,10 +62,12 @@
         
         .block-list li {
             padding: 5px;
-            background: #ffdddd;
+            border: 1px solid #ff0000;
             margin: 5px 0;
             border-radius: 5px;
             text-align: center;
+            background-color: transparent; /* Kein Hintergrund */
+            color: #ff0000;
         }
     </style>
 </head>
@@ -136,7 +138,7 @@
         // Alle 60 Sekunden falsche Blöcke neu ziehen
         setInterval(() => {
             fetchProgressData(); // Holen neue Daten, um ggf. veränderte Blöcke zu haben
-        }, 5 * 1000);
+        }, 60 * 1000);
     </script>
 
 </body>
