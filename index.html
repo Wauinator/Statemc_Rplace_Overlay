@@ -14,7 +14,6 @@
       height: 100vh;
       margin: 0;
     }
-
     /* Progress Bar Container */
     .progress-container {
       position: absolute;
@@ -24,7 +23,6 @@
       border-radius: 10px;
       overflow: hidden;
     }
-
     /* Progress Bar */
     .progress-bar {
       height: 30px;
@@ -35,7 +33,6 @@
       color: white;
       font-weight: bold;
     }
-
     /* Falsche Blöcke Box (Standard: versteckt) */
     .block-box {
       position: absolute;
@@ -49,19 +46,16 @@
       background-color: transparent;
       display: none; /* Standardmäßig ausgeblendet */
     }
-
     .block-box h3 {
       text-align: center;
       margin: 0;
       text-decoration: underline; /* Überschrift unterstrichen */
     }
-
     .block-list {
       list-style-type: none;
       padding: 0;
       margin-top: 10px;
     }
-
     .block-list li {
       padding: 5px;
       color: black;
@@ -85,57 +79,59 @@
     // GitHub API URL zur progress.txt im Repository
     const apiUrl = "https://api.github.com/repos/Wauinator/progress-bar-site/contents/progress.txt?ref=main";
 
-    // Funktion zum Abrufen und Dekodieren der Daten
+    // Funktion zum Abrufen und Dekodieren der Daten über die GitHub API
     async function fetchData() {
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error("Fehler beim Laden der Datei");
-      }
-      const data = await response.json();
-      // Inhalt dekodieren (Base64)
-      const decodedContent = atob(data.content);
-      return decodedContent.trim().split("\n");
-    }
-
-    // Nur den Fortschrittsbalken aktualisieren
-    async function updateProgress() {
       try {
-        const lines = await fetchData();
-        // Erste Zeile = Prozentzahl
-        const progress = parseInt(lines[0].replace("%", ""), 10) || 0;
-        const progressBar = document.getElementById("progress-bar");
-        progressBar.style.width = progress + "%";
-        progressBar.textContent = progress + "%";
-      } catch (error) {
-        console.error("Fehler beim Aktualisieren des Fortschritts:", error);
-      }
-    }
-
-    // Nur die falschen Blöcke aktualisieren
-    async function updateBlocks() {
-      try {
-        const lines = await fetchData();
-        // Restliche Zeilen = Blöcke
-        const blocks = lines.slice(1);
-        const blockList = document.getElementById("block-list");
-        const blockBox = document.getElementById("block-box");
-        blockList.innerHTML = "";
-
-        // 5 zufällige Blöcke auswählen, sofern vorhanden
-        const randomBlocks = blocks.length > 0 ? blocks.sort(() => 0.5 - Math.random()).slice(0, 5) : [];
-
-        if (randomBlocks.length > 0) {
-          blockBox.style.display = "block"; // Box anzeigen
-          randomBlocks.forEach(block => {
-            const li = document.createElement("li");
-            li.textContent = `- ${block}`; // Strich vor dem Block
-            blockList.appendChild(li);
-          });
-        } else {
-          blockBox.style.display = "none"; // Box ausblenden, falls keine Blöcke vorhanden
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error("Fehler beim Laden der Datei: " + response.status);
         }
+        const data = await response.json();
+        // Inhalt dekodieren (Base64)
+        const decodedContent = atob(data.content);
+        return decodedContent.trim().split("\n");
       } catch (error) {
-        console.error("Fehler beim Aktualisieren der Blöcke:", error);
+        console.error("Fehler in fetchData:", error);
+        return null;
+      }
+    }
+
+    // Aktualisiert nur den Fortschrittsbalken (alle 10 Sekunden)
+    async function updateProgress() {
+      const lines = await fetchData();
+      if (!lines) return;
+      // Erste Zeile = Prozentzahl
+      const progressLine = lines[0] || "0%";
+      const progress = parseInt(progressLine.replace("%", ""), 10) || 0;
+      const progressBar = document.getElementById("progress-bar");
+      progressBar.style.width = progress + "%";
+      progressBar.textContent = progress + "%";
+      console.log("Fortschritt aktualisiert:", progress + "%");
+    }
+
+    // Aktualisiert nur die falschen Blöcke (alle 60 Sekunden)
+    async function updateBlocks() {
+      const lines = await fetchData();
+      if (!lines) return;
+      // Restliche Zeilen = Blöcke
+      const blocks = lines.slice(1);
+      const blockList = document.getElementById("block-list");
+      const blockBox = document.getElementById("block-box");
+      blockList.innerHTML = "";
+      // 5 zufällige Blöcke auswählen, sofern vorhanden
+      if (blocks.length > 0) {
+        // Zufällige Reihenfolge
+        const randomBlocks = blocks.sort(() => 0.5 - Math.random()).slice(0, 5);
+        randomBlocks.forEach(block => {
+          const li = document.createElement("li");
+          li.textContent = `- ${block}`;
+          blockList.appendChild(li);
+        });
+        blockBox.style.display = "block"; // Box anzeigen
+        console.log("Blöcke aktualisiert:", randomBlocks);
+      } else {
+        blockBox.style.display = "none"; // Box ausblenden, falls keine Blöcke vorhanden
+        console.log("Keine Blöcke vorhanden.");
       }
     }
 
@@ -143,10 +139,9 @@
     updateProgress();
     updateBlocks();
 
-    // Alle 10 Sekunden nur den Fortschritt aktualisieren
+    // Fortschritt alle 10 Sekunden aktualisieren
     setInterval(updateProgress, 10 * 1000);
-
-    // Alle 60 Sekunden die falschen Blöcke aktualisieren
+    // Falsche Blöcke alle 60 Sekunden aktualisieren
     setInterval(updateBlocks, 60 * 1000);
   </script>
 
