@@ -3,53 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fortschrittsbalken</title>
+    <title>Progress Bar Site</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
             display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            align-items: flex-start;
             height: 100vh;
             margin: 0;
-            font-family: Arial, sans-serif;
         }
+        
+        /* Progress Bar Container */
         .progress-container {
-            width: 80%;
+            position: absolute;
+            top: 10px;
+            width: 50%;
             background-color: #ddd;
             border-radius: 10px;
             overflow: hidden;
         }
+        
+        /* Progress Bar */
         .progress-bar {
             height: 30px;
             width: 0%;
-            background-color: green;
+            background-color: #4caf50;
             text-align: center;
             line-height: 30px;
             color: white;
+            font-weight: bold;
+        }
+
+        /* Falsche Blöcke Box */
+        .block-box {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            padding: 10px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+        }
+
+        .block-box h3 {
+            text-align: center;
+            margin: 0;
+        }
+
+        .block-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+        
+        .block-list li {
+            padding: 5px;
+            background: #ffdddd;
+            margin: 5px 0;
+            border-radius: 5px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
+
+    <!-- Progress Bar -->
     <div class="progress-container">
         <div class="progress-bar" id="progress-bar">0%</div>
     </div>
+
+    <!-- Falsche Blöcke -->
+    <div class="block-box">
+        <h3>Falsche Blöcke</h3>
+        <ul class="block-list" id="block-list"></ul>
+    </div>
+
     <script>
-        async function updateProgress() {
+        const apiUrl = "https://raw.githubusercontent.com/Wauinator/progress-bar-site/refs/heads/main/progress.txt";
+
+        // Funktion zum Laden der Daten
+        async function fetchProgressData() {
             try {
-                const response = await fetch('https://api.github.com/repos/Wauinator/progress-bar-site/contents/progress.txt', { headers: { 'Accept': 'application/vnd.github.v3.raw' } });
-                if (!response.ok) throw new Error('Fehler beim Laden der Datei');
-                const progress = await response.text();
-                const progressValue = parseInt(progress.trim(), 10);
-                if (!isNaN(progressValue) && progressValue >= 0 && progressValue <= 100) {
-                    document.getElementById('progress-bar').style.width = progressValue + '%';
-                    document.getElementById('progress-bar').textContent = progressValue + '%';
-                }
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error("Fehler beim Laden der Datei");
+                const text = await response.text();
+                const lines = text.trim().split("\n");
+
+                // Erste Zeile = Prozentzahl
+                const progress = parseInt(lines[0].replace("%", ""), 10) || 0;
+                updateProgressBar(progress);
+
+                // Restliche Zeilen = Blöcke
+                const blocks = lines.slice(1);
+                updateBlocks(blocks);
             } catch (error) {
-                console.error('Fehler:', error);
+                console.error("Fehler beim Abrufen der Daten:", error);
             }
         }
-        setInterval(updateProgress, 5000); // Aktualisiert alle 5 Sekunden
-        updateProgress(); // Erste Aktualisierung direkt beim Laden
+
+        // Fortschrittsbalken aktualisieren
+        function updateProgressBar(progress) {
+            const progressBar = document.getElementById("progress-bar");
+            progressBar.style.width = progress + "%";
+            progressBar.textContent = progress + "%";
+        }
+
+        // Zufällige falsche Blöcke auswählen und anzeigen
+        function updateBlocks(blocks) {
+            const blockList = document.getElementById("block-list");
+            blockList.innerHTML = "";
+
+            // 5 zufällige Blöcke auswählen
+            const randomBlocks = blocks.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+            randomBlocks.forEach(block => {
+                const li = document.createElement("li");
+                li.textContent = block;
+                blockList.appendChild(li);
+            });
+        }
+
+        // Initiales Laden der Daten
+        fetchProgressData();
+
+        // Alle 10 Sekunden Fortschritt aktualisieren
+        setInterval(fetchProgressData, 10 * 1000);
+
+        // Alle 60 Sekunden falsche Blöcke neu ziehen
+        setInterval(() => {
+            fetchProgressData(); // Holen neue Daten, um ggf. veränderte Blöcke zu haben
+        }, 60 * 1000);
     </script>
+
 </body>
 </html>
