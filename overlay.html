@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortschrittsbalken</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+        .progress-container {
+            width: 80%;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 30px;
+            width: 0%;
+            background-color: #4caf50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h2>Live Fortschrittsbalken</h2>
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar">0%</div>
+    </div>
+    <script>
+        async function updateProgress() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/USERNAME/REPOSITORY/main/progress.txt', { cache: 'no-store' });
+                if (!response.ok) throw new Error('Fehler beim Laden der Datei');
+                const progress = await response.text();
+                const progressValue = parseInt(progress.trim(), 10);
+                if (!isNaN(progressValue) && progressValue >= 0 && progressValue <= 100) {
+                    document.getElementById('progress-bar').style.width = progressValue + '%';
+                    document.getElementById('progress-bar').textContent = progressValue + '%';
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+            }
+        }
+        setInterval(updateProgress, 5000); // Aktualisiert alle 5 Sekunden
+        updateProgress(); // Erste Aktualisierung direkt beim Laden
+    </script>
+</body>
+</html>
