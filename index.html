@@ -8,9 +8,9 @@
         body {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             height: 100vh;
-            flex-direction: column;
+            margin: 0;
             font-family: Arial, sans-serif;
         }
         .progress-container {
@@ -30,16 +30,13 @@
     </style>
 </head>
 <body>
-    <h2></h2>
     <div class="progress-container">
         <div class="progress-bar" id="progress-bar">0%</div>
     </div>
     <script>
         async function updateProgress() {
             try {
-                const response = await fetch('https://api.github.com/repos/Wauinator/progress-bar-site/contents/progress.txt', {
-                    headers: { 'Accept': 'application/vnd.github.v3.raw' }
-                });
+                const response = await fetch('https://api.github.com/repos/Wauinator/progress-bar-site/contents/progress.txt', { headers: { 'Accept': 'application/vnd.github.v3.raw' } });
                 if (!response.ok) throw new Error('Fehler beim Laden der Datei');
                 const progress = await response.text();
                 const progressValue = parseInt(progress.trim(), 10);
