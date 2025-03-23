@@ -36,7 +36,7 @@
             font-weight: bold;
         }
 
-        /* Falsche Blöcke Box */
+        /* Falsche Blöcke Box (Standard: versteckt) */
         .block-box {
             position: absolute;
             left: 10px;
@@ -46,12 +46,14 @@
             padding: 10px;
             border: 2px solid #333;
             border-radius: 8px;
-            background-color: transparent; /* Kein Hintergrund */
+            background-color: transparent;
+            display: none; /* Standardmäßig ausgeblendet */
         }
 
         .block-box h3 {
             text-align: center;
             margin: 0;
+            text-decoration: underline; /* Überschrift unterstrichen */
         }
 
         .block-list {
@@ -62,12 +64,7 @@
         
         .block-list li {
             padding: 5px;
-            border: 1px solid #ff0000;
-            margin: 5px 0;
-            border-radius: 5px;
-            text-align: center;
-            background-color: transparent; /* Kein Hintergrund */
-            color: #ff0000;
+            color: black;
         }
     </style>
 </head>
@@ -78,8 +75,8 @@
         <div class="progress-bar" id="progress-bar">0%</div>
     </div>
 
-    <!-- Falsche Blöcke -->
-    <div class="block-box">
+    <!-- Falsche Blöcke (Standard: versteckt) -->
+    <div class="block-box" id="block-box">
         <h3>Falsche Blöcke</h3>
         <ul class="block-list" id="block-list"></ul>
     </div>
@@ -117,16 +114,22 @@
         // Zufällige falsche Blöcke auswählen und anzeigen
         function updateBlocks(blocks) {
             const blockList = document.getElementById("block-list");
+            const blockBox = document.getElementById("block-box");
             blockList.innerHTML = "";
 
-            // 5 zufällige Blöcke auswählen
-            const randomBlocks = blocks.sort(() => 0.5 - Math.random()).slice(0, 5);
+            // 5 zufällige Blöcke auswählen, wenn vorhanden
+            const randomBlocks = blocks.length > 0 ? blocks.sort(() => 0.5 - Math.random()).slice(0, 5) : [];
 
-            randomBlocks.forEach(block => {
-                const li = document.createElement("li");
-                li.textContent = block;
-                blockList.appendChild(li);
-            });
+            if (randomBlocks.length > 0) {
+                blockBox.style.display = "block"; // Box anzeigen
+                randomBlocks.forEach(block => {
+                    const li = document.createElement("li");
+                    li.textContent = `- ${block}`; // Strich vor den Blöcken
+                    blockList.appendChild(li);
+                });
+            } else {
+                blockBox.style.display = "none"; // Box ausblenden
+            }
         }
 
         // Initiales Laden der Daten
@@ -137,9 +140,10 @@
 
         // Alle 60 Sekunden falsche Blöcke neu ziehen
         setInterval(() => {
-            fetchProgressData(); // Holen neue Daten, um ggf. veränderte Blöcke zu haben
+            fetchProgressData(); // Neue Daten abrufen
         }, 60 * 1000);
     </script>
 
 </body>
 </html>
+
