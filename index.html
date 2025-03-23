@@ -12,12 +12,15 @@
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
+            flex-direction: column;
+            padding-top: 10px;
         }
         .progress-container {
             width: 80%;
             background-color: #ddd;
             border-radius: 10px;
             overflow: hidden;
+            margin-bottom: 20px;
         }
         .progress-bar {
             height: 30px;
@@ -27,27 +30,71 @@
             line-height: 30px;
             color: white;
         }
+        .sidebar {
+            margin-left: 20px;
+            max-width: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+        .sidebar h3 {
+            text-align: center;
+        }
+        .block-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .block-list li {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
     <div class="progress-container">
         <div class="progress-bar" id="progress-bar">0%</div>
     </div>
+    <div class="sidebar">
+        <h3>Falsche Blöcke</h3>
+        <ul class="block-list" id="block-list"></ul>
+    </div>
     <script>
         async function updateProgress() {
             try {
                 const response = await fetch('https://api.github.com/repos/Wauinator/progress-bar-site/contents/progress.txt', { headers: { 'Accept': 'application/vnd.github.v3.raw' } });
                 if (!response.ok) throw new Error('Fehler beim Laden der Datei');
-                const progress = await response.text();
-                const progressValue = parseInt(progress.trim(), 10);
+                const data = await response.text();
+
+                const lines = data.split('\n').map(line => line.trim()).filter(line => line !== '');
+                const progressValue = parseInt(lines[0], 10);  // Erste Zeile ist der Fortschritt
+                const blocks = lines.slice(1);  // Rest sind die falschen Blöcke
+
+                // Aktualisiere den Fortschrittsbalken
                 if (!isNaN(progressValue) && progressValue >= 0 && progressValue <= 100) {
                     document.getElementById('progress-bar').style.width = progressValue + '%';
                     document.getElementById('progress-bar').textContent = progressValue + '%';
                 }
+
+                // Wähle zufällig bis zu 5 Blöcke aus und zeige sie an
+                const randomBlocks = [];
+                for (let i = 0; i < Math.min(5, blocks.length); i++) {
+                    const randomIndex = Math.floor(Math.random() * blocks.length);
+                    randomBlocks.push(blocks[randomIndex]);
+                    blocks.splice(randomIndex, 1);  // Entferne den Block, damit er nicht doppelt ausgewählt wird
+                }
+
+                // Zeige die zufällig ausgewählten falschen Blöcke an
+                const blockList = document.getElementById('block-list');
+                blockList.innerHTML = '';
+                randomBlocks.forEach(block => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = block;
+                    blockList.appendChild(listItem);
+                });
             } catch (error) {
                 console.error('Fehler:', error);
             }
         }
+
         setInterval(updateProgress, 5000); // Aktualisiert alle 5 Sekunden
         updateProgress(); // Erste Aktualisierung direkt beim Laden
     </script>
